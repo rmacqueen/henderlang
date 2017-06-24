@@ -46,7 +46,7 @@ stream() ->
     Url = "https://stream.twitter.com/1.1/statuses/filter.json",
     Method = "POST",
     Params = [
-              {"track", "comprised"}
+              {"track", "hello"}
              ],
 
     Headers = [auth_header(Method, Url, Params)],
@@ -85,7 +85,7 @@ loop_fun (Ref, OldChunk) ->
                             case maps:is_key(<<"text">>, Obj) andalso maps:is_key(<<"retweeted_status">>, Obj) /= true of
                                 true ->
                                     io:format("Got a hit: ~p~n", [binary_to_list(maps:get(<<"text">>, Obj))]),
-                                    Match = re:run(maps:get(<<"text">>, Obj), "(\\bbe\\b|\\bis\\b|\\bare\\b)\s*comprised\s*\\bof\\b"),
+                                    Match = re:run("testing is comprised of test", "(\\bbe\\b|\\bis\\b|\\bare\\b)\s*comprised\s*\\bof\\b"),
                                     Tweet_User = maps:get(<<"user">>, Obj),
                                     Username = binary_to_list(maps:get(<<"screen_name">>, Tweet_User)),
 
