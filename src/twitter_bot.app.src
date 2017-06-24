@@ -1,0 +1,19 @@
+{application, twitter_bot,
+ [{description, "A prescriptive grammar twitter bot"},
+  {vsn, "0.1.0"},
+  {registered, []},
+  {mod, { twitter_bot_app, []}},
+  {applications,
+   [kernel,
+    stdlib,
+    oauth,
+    jsx,
+    hackney
+   ]},
+  {env,[]},
+  {modules, []},
+
+  {maintainers, []},
+  {licenses, ["Apache 2.0"]},
+  {links, []}
+ ]}.
