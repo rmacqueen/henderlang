@@ -82,14 +82,12 @@ loop_fun (Ref, OldChunk) ->
                             loop_fun(Ref, "");
                         Num ->    
                             Obj = jsx:decode(list_to_binary(Combinedchunk), [return_maps]),
-                            PrettyJson = jsx:encode(Obj, [{indent, 4}]),
                             case maps:is_key(<<"text">>, Obj) andalso maps:is_key(<<"retweeted_status">>, Obj) /= true of
                                 true ->
                                     io:format("Got a hit: ~p~n", [binary_to_list(maps:get(<<"text">>, Obj))]),
                                     Match = re:run(maps:get(<<"text">>, Obj), "(\\bbe\\b|\\bis\\b|\\bare\\b)\s*comprised\s*\\bof\\b"),
                                     Tweet_User = maps:get(<<"user">>, Obj),
                                     Username = binary_to_list(maps:get(<<"screen_name">>, Tweet_User)),
-                                    io:format("User: ~p~n",[Username]),
 
                                     Tweet_Id = maps:get(<<"id">>, Obj),
                                     case Match of
@@ -101,7 +99,6 @@ loop_fun (Ref, OldChunk) ->
 
                                     loop_fun(Ref, "");
                                 false ->
-                                    io:format("Was retweet or no text~n"),
                                     loop_fun(Ref, "")
                             end
                     end;
@@ -109,7 +106,6 @@ loop_fun (Ref, OldChunk) ->
                     loop_fun(Ref, Combinedchunk)
             end;
         Else ->
-            io:format("else ~p~n", [Else]),
             ok
     end.
 
@@ -124,7 +120,7 @@ auth_header(Method, Url, Params) ->
 
 
 submit_reply(Tweet_Id, Username) ->
-
+    io:format("Submitting reply to: ~p~n", [Username]),
     Urlbase = "https://api.twitter.com/1.1/statuses/update.json",
     Url = "https://api.twitter.com/1.1/statuses/update.json",
 
@@ -135,7 +131,6 @@ submit_reply(Tweet_Id, Username) ->
 
     Header = [oauth:header(SignedParams), {"Host", "api.twitter.com"}, {"User-Agent", "Twerl"}],
     Body = "status=%40" ++ Username ++ "%20nice%20post&in_reply_to_status_id=" ++ Tweet_Id_str,
-    io:format("Sending Body~p~n", [Body]),
 
     R = httpc:request(post, {Url, Header, ?CONTENT_TYPE, Body}, [], []),
 
