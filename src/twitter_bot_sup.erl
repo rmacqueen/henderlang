@@ -126,11 +126,15 @@ submit_reply(Tweet_Id, Username) ->
 
     Consumer = {?CONSUMER_KEY, ?CONSUMER_SECRET, hmac_sha1},
 
+    ResponseMessage = "The grammatical construction 'comprised of' is imprecise and illogical. See https://en.wikipedia.org/wiki/User:Giraffedata/comprised_of Try rephrasing with e.g. 'composed of'.",
+    TweetReply = "@" ++ Username ++ " " ++ ResponseMessage,
+
+
     Tweet_Id_str = integer_to_list(Tweet_Id),
-    SignedParams = oauth:sign("POST", Urlbase, [{"status", "@" ++ Username ++ " nice post"}, {"in_reply_to_status_id", Tweet_Id_str}], Consumer, ?ACCESS_TOKEN, ?ACCESS_SECRET),
+    SignedParams = oauth:sign("POST", Urlbase, [{"status", TweetReply}, {"in_reply_to_status_id", Tweet_Id_str}], Consumer, ?ACCESS_TOKEN, ?ACCESS_SECRET),
 
     Header = [oauth:header(SignedParams), {"Host", "api.twitter.com"}, {"User-Agent", "Twerl"}],
-    Body = "status=%40" ++ Username ++ "%20nice%20post&in_reply_to_status_id=" ++ Tweet_Id_str,
+    Body = "status=" ++ edoc_lib:escape_uri(TweetReply) ++ "&in_reply_to_status_id=" ++ Tweet_Id_str,
 
     R = httpc:request(post, {Url, Header, ?CONTENT_TYPE, Body}, [], []),
 
