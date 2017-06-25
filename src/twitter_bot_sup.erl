@@ -131,10 +131,11 @@ submit_reply(Tweet_Id, Username) ->
 
 
     Tweet_Id_str = integer_to_list(Tweet_Id),
-    SignedParams = oauth:sign("POST", Urlbase, [{"status", TweetReply}, {"in_reply_to_status_id", Tweet_Id_str}], Consumer, ?ACCESS_TOKEN, ?ACCESS_SECRET),
+    TweetParams = [{"status", TweetReply}, {"in_reply_to_status_id", Tweet_Id_str}],
+    SignedParams = oauth:sign("POST", Urlbase, TweetParams, Consumer, ?ACCESS_TOKEN, ?ACCESS_SECRET),
 
     Header = [oauth:header(SignedParams), {"Host", "api.twitter.com"}, {"User-Agent", "Twerl"}],
-    Body = "status=" ++ edoc_lib:escape_uri(TweetReply) ++ "&in_reply_to_status_id=" ++ Tweet_Id_str,
+    Body = oauth:uri_params_encode(TweetParams),
 
     R = httpc:request(post, {Url, Header, ?CONTENT_TYPE, Body}, [], []),
 
