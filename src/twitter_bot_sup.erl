@@ -84,16 +84,29 @@ loop_fun (Ref, OldChunk) ->
                             Obj = jsx:decode(list_to_binary(Combinedchunk), [return_maps]),
                             case maps:is_key(<<"text">>, Obj) andalso maps:is_key(<<"retweeted_status">>, Obj) /= true of
                                 true ->
-                                    io:format("Got a hit: ~p~n", [binary_to_list(maps:get(<<"text">>, Obj))]),
-                                    Match = re:run(maps:get(<<"text">>, Obj), "(\\bbe\\b|\\bis\\b|\\bare\\b)\s*comprised\s*\\bof\\b"),
+                                    io:format("Got a hit: ~s~n", [binary_to_list(maps:get(<<"text">>, Obj))]),
+
+                                    Match = re:split(maps:get(<<"text">>, Obj), "(\\bbe\\b|\\bis\\b|\\bare\\b|\\bwas\\b)\s*comprised\s*\\bof\\b", [{return, list}]),
+
                                     Tweet_User = maps:get(<<"user">>, Obj),
                                     Username = binary_to_list(maps:get(<<"screen_name">>, Tweet_User)),
 
                                     Tweet_Id = maps:get(<<"id">>, Obj),
-                                    case Match of
-                                        {match, Pos} ->
-                                            submit_reply(Tweet_Id, Username);
-                                        nomatch ->
+                                    io:format("Match ~s~n", [Match]),
+                                    case length(Match) of
+                                        3 ->
+                                            [Pre, Tobe, Post] = Match,
+                                            PreArr = re:split(Pre, " ", [{return, list}]),
+                                            PreArrShort = lists:nthtail(length(PreArr) - 4, PreArr),
+                                            NewPre = string:join(PreArrShort, " "),
+                                            PostArr = re:split(Post, " ", [{return, list}]),
+                                            PostArrShort = lists:sublist(PostArr, 3),
+                                            NewPost = string:join(PostArrShort, " "),
+                                            Result = "Correction: " ++ NewPre ++ Tobe ++ " composed of" ++ NewPost ++ " " ++ "https://en.wikipedia.org/wiki/User:Giraffedata/comprised_of",
+                                            io:format("Result: ~s~n", [Result]),
+
+                                            submit_reply(Tweet_Id, Username, Result);
+                                        Not3 ->
                                             io:format("Did not get a match~n")
                                     end,
 
@@ -119,16 +132,14 @@ auth_header(Method, Url, Params) ->
                                   {<<"Authorization">>, <<"OAuth ", OAuth/binary>>}.
 
 
-submit_reply(Tweet_Id, Username) ->
+submit_reply(Tweet_Id, Username, Reply) ->
     io:format("Submitting reply to: ~p~n", [Username]),
     Urlbase = "https://api.twitter.com/1.1/statuses/update.json",
     Url = "https://api.twitter.com/1.1/statuses/update.json",
 
     Consumer = {?CONSUMER_KEY, ?CONSUMER_SECRET, hmac_sha1},
 
-    ResponseMessage = "The grammatical construction 'comprised of' is imprecise and illogical. See https://en.wikipedia.org/wiki/User:Giraffedata/comprised_of Try rephrasing with e.g. 'composed of'.",
-    TweetReply = "@" ++ Username ++ " " ++ ResponseMessage,
-
+    TweetReply = "@" ++ Username ++ " " ++ Reply,
 
     Tweet_Id_str = integer_to_list(Tweet_Id),
     TweetParams = [{"status", TweetReply}, {"in_reply_to_status_id", Tweet_Id_str}],
